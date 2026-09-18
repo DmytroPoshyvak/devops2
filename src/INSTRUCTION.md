@@ -31,17 +31,17 @@ minikube addons enable metrics-server
   away in `kubectl logs` instead of being buffered). No change needed unless you want
   it disabled (`"0"`).
 
-- Both `configMap.yml` and `secret.yml` create resources named `todoapp-config` and
-  `todoapp-secret` respectively. `deployment.yml` already references these exact
+- Both `configMap.yml` and `secret.yml` create resources named `configmapname` and
+  `secretname` respectively. `deployment.yml` already references these exact
   names via `configMapKeyRef` / `secretKeyRef` — if you rename either resource, update
   the matching `name:` field under `env` in `deployment.yml` as well.
 
 ## How to deploy
 
-1. Make sure the `mateapp` namespace exists:
+1. Make sure the `todoapp` namespace exists:
 
 ```bash
-kubectl create namespace mateapp
+kubectl create namespace todoapp
 ```
 
 (skip this step if the namespace already exists)
@@ -66,12 +66,12 @@ kubectl apply -f deployment.yml
 kubectl apply -f hpa.yml
 ```
 
-4. Verify everything is running:
+5. Verify everything is running:
 
 ```bash
-kubectl get deployment -n mateapp
-kubectl get pods -n mateapp
-kubectl get hpa -n mateapp
+kubectl get deployment -n todoapp
+kubectl get pods -n todoapp
+kubectl get hpa -n todoapp
 ```
 
 You should see 2 pods running in the idle state, and the HPA showing current CPU/Memory
@@ -82,8 +82,8 @@ utilization against the configured targets.
 1. Confirm the ConfigMap and Secret objects were created:
 
 ```bash
-kubectl get configmap todoapp-config -n mateapp -o yaml
-kubectl get secret todoapp-secret -n mateapp -o yaml
+kubectl get configmap configmapname -n todoapp -o yaml
+kubectl get secret secretname -n todoapp -o yaml
 ```
 
 The Secret's `data.SECRET_KEY` value shown here will be base64-encoded (Kubernetes
@@ -91,13 +91,13 @@ always stores/returns Secret data this way, regardless of whether it was created
 `data` or `stringData`). To confirm the actual value being injected:
 
 ```bash
-kubectl get secret todoapp-secret -n mateapp -o jsonpath='{.data.SECRET_KEY}' | base64 -d
+kubectl get secret secretname -n todoapp -o jsonpath='{.data.SECRET_KEY}' | base64 -d
 ```
 
 2. Confirm the pods actually received these values as environment variables:
 
 ```bash
-kubectl exec -n mateapp deploy/todoapp -- env | grep -E "PYTHONUNBUFFERED|SECRET_KEY"
+kubectl exec -n todoapp deploy/todoapp -- env | grep -E "PYTHONUNBUFFERED|SECRET_KEY"
 ```
 
 You should see both variables printed with the values you set in `configMap.yml` and
@@ -111,7 +111,7 @@ You should see both variables printed with the values you set in `configMap.yml`
 
 ```bash
 kubectl apply -f secret.yml
-kubectl rollout restart deployment/todoapp -n mateapp
+kubectl rollout restart deployment/todoapp -n todoapp
 ```
 
 If the app were still using the hardcoded value from `settings.py`, changing the
@@ -124,7 +124,7 @@ required for that. The simplest way to access the app for testing purposes is
 `kubectl port-forward`:
 
 ```bash
-kubectl port-forward deployment/todoapp 8080:8080 -n mateapp
+kubectl port-forward deployment/todoapp 8080:8080 -n todoapp
 ```
 
 Then open:
